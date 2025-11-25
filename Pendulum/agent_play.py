@@ -20,6 +20,7 @@ reward_growth = []
 
 for t in range(200):
 	action = env.action_space.sample()
+	print("Action ", action)
 	next_obs, reward, terminated, truncated, info = env.step(action)
 	total_reward += reward
 	reward_growth.append(total_reward)
