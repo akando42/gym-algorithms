@@ -60,6 +60,10 @@ class ActorCriticSoftmaxAgent(BaseAgent):
         self.avg_reward_step_size = agent_info.get("avg_reward_step_size")
 
         self.actions = list(range(agent_info.get("num_actions")))
+        print(
+            "POSSIBLE ACTIONS ", 
+            self.actions
+        )
 
         # Set initial values of average reward, actor weights, and critic weights
         # We initialize actor weights to three times the iht_size. 

@@ -11,6 +11,14 @@ import gymnasium as gym
 
 import matplotlib.pyplot as plt 
 
+def metrics(obs):
+	cos_theta = obs[0]
+	sin_theta = obs[1]
+	theta_dot = obs[2]
+	theta = np.degrees(np.arctan2(sin_theta, cos_theta))
+	# print("Angle:", theta, "Angle Velocity: ", theta_dot)
+	return (theta, theta_dot)
+
 def run_experiment(
 		current_env, 
 		current_agent, 
@@ -45,19 +53,38 @@ def run_experiment(
 		print(agent_info)
 
 		current_agent.agent_init(agent_info)
+		actions = np.linspace(-2.0, 2.0, 10)
+
+		agent_last_state = metrics(obs)
+		agent_last_action = None
+		agent_last_reward = None
 
 		while num_steps < experiment_parameters['max_steps']:
 			num_steps += 1
+			action = None
 			###
 			
 			### MAX LEFT
 			# action = [1.9] 
 
-			### RANDOM ACTION
-			action = current_env.action_space.sample()
+			if num_steps == 1:
+				### RANDOM START ACTION
+				# action = current_env.action_space.sample()
 
-			### ACTOR_CRITIC SOFTMAX AGENT
+				### ACTOR CRITIC SOFTMAX AGENT START
+				agent_action_index = current_agent.agent_start(agent_last_state)
+				action = [actions[agent_action_index]]
 
+			else: 
+				### ACTOR_CRITIC SOFTMAX AGENT
+				agent_action_index = current_agent.agent_step(
+					agent_last_reward,
+					agent_last_state
+				)
+				
+				action = [actions[agent_action_index]]				
+				
+				print("AGENT START ACTION ",action)
 
 			### IMPROVING ACTION SELECTION
 			###
@@ -75,6 +102,10 @@ def run_experiment(
 				)
 
 			total_reward += reward
+
+			agent_last_state = metrics(next_obs)
+			agent_last_reward = reward
+			agent_last_action = action
 
 			if terminated or truncated:
 				obs, info = current_env.reset()
@@ -109,7 +140,7 @@ agent_parameters = {
     "actor_step_size": 2**(-2),
     "critic_step_size": 2**1,
     "avg_reward_step_size": 2**(-6),
-    "num_actions": 3,
+    "num_actions": 10,
     "iht_size": 4096
 }
 
