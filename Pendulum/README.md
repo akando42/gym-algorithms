@@ -1,5 +1,7 @@
 ### ACTOR CRITIC TIDE CODING
-[ ] Port Jupter Notebook to Python Experiment File
+[X] Port Jupter Notebook to Python Experiment File
+[ ] Store Optimal Policy as Picke File
+[ ] Use Pickle File for Optimal Game Play 
 
 ### ACTOR CRITIC NEURAL NETWORK
 

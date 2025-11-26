@@ -1,0 +1,133 @@
+import numpy as np
+from tqdm import tqdm
+
+from pendulum_env import PendulumEnvironment
+from agent import ActorCriticSoftmaxAgent
+from rl_glue import RLGlue
+
+import os
+import plot_script
+import gymnasium as gym
+
+import matplotlib.pyplot as plt 
+
+def run_experiment(
+		current_env, 
+		current_agent, 
+		experiment_parameters,
+		agent_parameters
+	):
+
+	obs, info = current_env.reset(seed=0)
+	agent_info = {
+	 	"num_tilings": agent_parameters['num_tilings'],
+        "num_tiles": agent_parameters['num_tiles'],
+        "actor_step_size": agent_parameters['actor_step_size'],
+        "critic_step_size": agent_parameters['critic_step_size'],
+        "avg_reward_step_size": agent_parameters['avg_reward_step_size'],
+        "num_actions": agent_parameters["num_actions"],
+        "iht_size": agent_parameters["iht_size"]
+    }
+
+	return_per_experiments = np.zeros((experiment_parameters['num_runs']))
+
+	for i in tqdm(range(experiment_parameters['num_runs'])):		
+		
+		obs, info = current_env.reset() 
+		total_reward = 0	
+		num_steps = 0
+
+		print(agent_parameters)
+
+		### AGENT INIT
+		agent_info["seed"] = i
+		print(current_agent)
+		print(agent_info)
+
+		current_agent.agent_init(agent_info)
+
+		while num_steps < experiment_parameters['max_steps']:
+			num_steps += 1
+			###
+			
+			### MAX LEFT
+			# action = [1.9] 
+
+			### RANDOM ACTION
+			action = current_env.action_space.sample()
+
+			### ACTOR_CRITIC SOFTMAX AGENT
+
+
+			### IMPROVING ACTION SELECTION
+			###
+			# print(
+			# 	"Taking Step ", num_steps, 
+			# 	"with action ", action
+			# )
+
+			next_obs, reward, terminated, truncated, info = current_env.step(action)
+			if reward > -0.1:
+				print(
+					"EXPERIMENT ", i,
+					"STEP", num_steps, 
+					"REWARD ", reward
+				)
+
+			total_reward += reward
+
+			if terminated or truncated:
+				obs, info = current_env.reset()
+
+		return_per_experiments[i] = total_reward
+		# print("######## End Experiment ", i, "Reward ", total_reward)
+
+	# print(return_per_experiments)
+
+	current_env.close()
+
+	if not os.path.exists('experiments'):
+		os.makedirs('experiments')
+
+	exper_data_file = "experiments/exper_data.npy"
+	np.save(exper_data_file, return_per_experiments)
+
+	### Plot Experiment Reward Growth 
+	plt.figure(figsize=(8, 5))
+	plt.plot(return_per_experiments)
+	plt.xlabel("Experiment Run", fontsize=12)
+	plt.ylabel("Cummulative Reward", fontsize=12)
+	plt.title("Pendulum Cummulative Reward Growth", fontsize=14)
+	plt.savefig("reward_growth.png", dpi=100)
+	plt.show()
+
+
+### ActorCritic Softmax TileCoding Agent
+agent_parameters = {
+    "num_tilings": 32,
+    "num_tiles": 8,
+    "actor_step_size": 2**(-2),
+    "critic_step_size": 2**1,
+    "avg_reward_step_size": 2**(-6),
+    "num_actions": 3,
+    "iht_size": 4096
+}
+
+# Environment parameters
+environment_parameters = {}
+
+experiment_parameters = {
+	"max_steps": 100, 
+	"num_runs": 1000
+}
+
+current_env = gym.make("Pendulum-v1")
+current_agent = ActorCriticSoftmaxAgent()
+
+run_experiment(
+	current_env, 
+	current_agent, 
+	experiment_parameters, 
+	agent_parameters
+)
+
