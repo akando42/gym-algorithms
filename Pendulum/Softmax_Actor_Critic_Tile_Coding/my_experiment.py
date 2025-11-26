@@ -76,7 +76,7 @@ def run_experiment(
 				action = [actions[agent_action_index]]
 
 			else: 
-				### ACTOR_CRITIC SOFTMAX AGENT
+				### ACTOR_CRITIC SOFTMAX AGENT STEP
 				agent_action_index = current_agent.agent_step(
 					agent_last_reward,
 					agent_last_state
