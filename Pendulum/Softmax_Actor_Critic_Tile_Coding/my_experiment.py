@@ -37,20 +37,31 @@ def run_experiment(
         "iht_size": agent_parameters["iht_size"]
     }
 
-	return_per_experiments = np.zeros((experiment_parameters['num_runs']))
+	return_per_experiment = np.zeros(
+		(experiment_parameters['num_runs'])
+	)
+
+	avg_reward_per_experiment = np.zeros(
+		(experiment_parameters['num_runs'])
+	)
+
+	max_avg_reward = 0
+	best_experiment_index = 0
+	optimal_policy_weights = np.zeros((10, 4096))
 
 	for i in tqdm(range(experiment_parameters['num_runs'])):		
 		
 		obs, info = current_env.reset() 
 		total_reward = 0	
+		average_reward = 0
 		num_steps = 0
 
-		print(agent_parameters)
+		#print(agent_parameters)
 
 		### AGENT INIT
 		agent_info["seed"] = i
-		print(current_agent)
-		print(agent_info)
+		# print(current_agent)
+		# print(agent_info)
 
 		current_agent.agent_init(agent_info)
 		actions = np.linspace(-2.0, 2.0, 10)
@@ -82,9 +93,9 @@ def run_experiment(
 					agent_last_state
 				)
 				
-				action = [actions[agent_action_index]]				
+				action = [actions[agent_action_index]]
+				# print("AGENT START ACTION ",action)
 				
-				print("AGENT START ACTION ",action)
 
 			### IMPROVING ACTION SELECTION
 			###
@@ -94,23 +105,44 @@ def run_experiment(
 			# )
 
 			next_obs, reward, terminated, truncated, info = current_env.step(action)
-			if reward > -0.1:
-				print(
-					"EXPERIMENT ", i,
-					"STEP", num_steps, 
-					"REWARD ", reward
-				)
+			# if reward > -0.1:
+			# 	print(
+			# 		"EXPERIMENT ", i,
+			# 		"STEP", num_steps, 
+			# 		"REWARD ", reward
+			# 	)
 
 			total_reward += reward
+
+			average_reward = current_agent.agent_message(
+				"get avg reward"
+			)
+
+			#print("AVERAGE REWARD ", reward, average_reward)
 
 			agent_last_state = metrics(next_obs)
 			agent_last_reward = reward
 			agent_last_action = action
 
 			if terminated or truncated:
+
 				obs, info = current_env.reset()
 
-		return_per_experiments[i] = total_reward
+		return_per_experiment[i] = total_reward
+		avg_reward_per_experiment[i] = average_reward
+		actor_weights = current_agent.agent_message(
+			"get actor weights"
+		)
+
+		# print("TOTAL REWARD ", total_reward)
+		# print("AVERAGE REWARD ", average_reward)
+		# print("ACTOR WEIGHT ", actor_weights.shape)
+
+		if average_reward > max_avg_reward:
+			max_avg_reward = average_reward
+			optimal_policy_weights = actor_weights
+			best_experiment_index = i
+
 		# print("######## End Experiment ", i, "Reward ", total_reward)
 
 	# print(return_per_experiments)
@@ -121,15 +153,38 @@ def run_experiment(
 		os.makedirs('experiments')
 
 	exper_data_file = "experiments/exper_data.npy"
-	np.save(exper_data_file, return_per_experiments)
+	np.save(exper_data_file, return_per_experiment)
 
-	### Plot Experiment Reward Growth 
+	avg_reward_data_file = "experiments/avg_reward_exp.npy"
+	np.save(avg_reward_data_file, avg_reward_per_experiment)
+
+	print(
+		"BEST EXPERIMENT ", best_experiment_index, 
+		"Avg Reward ", max_avg_reward
+	)
+	np.save(
+		"experiments/optimal_policy_{}_weights.npy".format(
+			best_experiment_index,
+		),
+		optimal_policy_weights
+	)
+
+	### Plot Total Reward Per Experiment
+	# plt.figure(figsize=(8, 5))
+	# plt.plot(return_per_experiment)
+	# plt.xlabel("Experiment Run", fontsize=12)
+	# plt.ylabel("Cummulative Reward", fontsize=12)
+	# plt.title("Pendulum Cummulative Reward Growth", fontsize=14)
+	# plt.savefig("reward_growth.png", dpi=100)
+	# plt.show()
+
+	### Plot Average Reward Per Experiment
 	plt.figure(figsize=(8, 5))
-	plt.plot(return_per_experiments)
+	plt.plot(avg_reward_per_experiment)
 	plt.xlabel("Experiment Run", fontsize=12)
-	plt.ylabel("Cummulative Reward", fontsize=12)
-	plt.title("Pendulum Cummulative Reward Growth", fontsize=14)
-	plt.savefig("reward_growth.png", dpi=100)
+	plt.ylabel("Average Reward", fontsize=12)
+	plt.title("Pendulum Average Reward", fontsize=14)
+	plt.savefig("average_reward.png", dpi=100)
 	plt.show()
 
 
@@ -149,7 +204,7 @@ environment_parameters = {}
 
 experiment_parameters = {
 	"max_steps": 100, 
-	"num_runs": 1000
+	"num_runs": 5000
 }
 
 current_env = gym.make("Pendulum-v1")

@@ -40,7 +40,7 @@ class ActorCriticSoftmaxAgent(BaseAgent):
             "seed": int
         }
         """
-        print("AGENT INFO", agent_info)
+        # print("AGENT INFO", agent_info)
 
         # set random seed for each run
         self.rand_generator = np.random.RandomState(
@@ -197,3 +197,22 @@ class ActorCriticSoftmaxAgent(BaseAgent):
     def agent_message(self, message):
         if message == 'get avg reward':
             return self.avg_reward
+
+        if message == "get actor weights":
+            return self.actor_w
+
+    def agent_optimal(self, state, optimal_policy_weights):
+        angle, ang_vel = state
+        active_tiles = self.tc.get_tiles(
+            angle,
+            ang_vel
+        )
+
+        softmax_prob = compute_softmax_prob(
+            optimal_policy_weights,
+            active_tiles
+        )
+        chosen_action = self.rand_generator.choice(self.actions, p=softmax_prob)
+
+        return chosen_action
+

@@ -28,8 +28,15 @@ def run_experiment(environment, agent, environment_parameters, agent_parameters,
                                       "iht_size": agent_parameters["iht_size"]}            
             
                         # results to save
-                        return_per_step = np.zeros((experiment_parameters["num_runs"], experiment_parameters["max_steps"]))
-                        exp_avg_reward_per_step = np.zeros((experiment_parameters["num_runs"], experiment_parameters["max_steps"]))
+                        return_per_step = np.zeros((
+                            experiment_parameters["num_runs"],
+                            experiment_parameters["max_steps"]
+                        ))
+
+                        exp_avg_reward_per_step = np.zeros((
+                            experiment_parameters["num_runs"], 
+                            experiment_parameters["max_steps"]
+                        ))
 
                         # using tqdm we visualize progress bars 
                         for run in tqdm(range(1, experiment_parameters["num_runs"]+1)):
@@ -58,6 +65,7 @@ def run_experiment(environment, agent, environment_parameters, agent_parameters,
                                 reward = rl_step_result[0]
                                 total_return += reward
                                 return_arr.append(reward)
+                                
                                 avg_reward = rl_glue.rl_agent_message("get avg reward")
 
                                 exp_avg_reward_normalizer = exp_avg_reward_normalizer + exp_avg_reward_ss * (1 - exp_avg_reward_normalizer)
@@ -66,6 +74,8 @@ def run_experiment(environment, agent, environment_parameters, agent_parameters,
                                 
                                 return_per_step[run-1][num_steps-1] = total_return
                                 exp_avg_reward_per_step[run-1][num_steps-1] = exp_avg_reward
+
+                            print("Experiment ", run, "with return ", total_return)
                                                         
                         if not os.path.exists('results'):
                             os.makedirs('results')

@@ -132,10 +132,12 @@ class RLGlue:
         self.total_reward += reward;
 
         if term:
+            print("TERMINAL STATE")
             self.num_episodes += 1
             self.agent.agent_end(reward)
             roat = (reward, last_state, None, term)
         else:
+            # print("EXPLORATION STEP")
             self.num_steps += 1
             self.last_action = self.agent.agent_step(reward, last_state)
             roat = (reward, last_state, self.last_action, term)
