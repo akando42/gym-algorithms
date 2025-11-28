@@ -41,16 +41,21 @@ def run_experiment(
 		(experiment_parameters['num_runs'])
 	)
 
-	avg_reward_per_experiment = np.zeros(
-		(experiment_parameters['num_runs'])
-	)
+	avg_reward_per_experiment_step = np.zeros((
+		experiment_parameters['num_runs'], 
+		experiment_parameters['max_steps']
+	))
 
-	max_avg_reward = 0
+	max_avg_reward = -8
+	exp_avg_reward = 0
+
 	best_experiment_index = 0
 	optimal_policy_weights = np.zeros((10, 4096))
 
+
 	for i in tqdm(range(experiment_parameters['num_runs'])):		
-		
+		rewards = []
+
 		obs, info = current_env.reset() 
 		total_reward = 0	
 		average_reward = 0
@@ -64,7 +69,10 @@ def run_experiment(
 		# print(agent_info)
 
 		current_agent.agent_init(agent_info)
-		actions = np.linspace(-2.0, 2.0, 10)
+		actions = np.linspace(
+			-2.0, 2.0, 
+			agent_parameters['num_actions']
+		)
 
 		agent_last_state = metrics(obs)
 		agent_last_action = None
@@ -113,10 +121,13 @@ def run_experiment(
 			# 	)
 
 			total_reward += reward
+			rewards.append(reward)
+			average_reward = sum(rewards)/num_steps
+			avg_reward_per_experiment_step[i][num_steps-1] = average_reward
 
-			average_reward = current_agent.agent_message(
-				"get avg reward"
-			)
+			# average_reward = current_agent.agent_message(
+			# 	"get avg reward"
+			# )
 
 			#print("AVERAGE REWARD ", reward, average_reward)
 
@@ -125,11 +136,11 @@ def run_experiment(
 			agent_last_action = action
 
 			if terminated or truncated:
-
 				obs, info = current_env.reset()
 
 		return_per_experiment[i] = total_reward
-		avg_reward_per_experiment[i] = average_reward
+		exp_avg_reward = average_reward
+
 		actor_weights = current_agent.agent_message(
 			"get actor weights"
 		)
@@ -138,7 +149,7 @@ def run_experiment(
 		# print("AVERAGE REWARD ", average_reward)
 		# print("ACTOR WEIGHT ", actor_weights.shape)
 
-		if average_reward > max_avg_reward:
+		if exp_avg_reward > max_avg_reward:
 			max_avg_reward = average_reward
 			optimal_policy_weights = actor_weights
 			best_experiment_index = i
@@ -156,7 +167,10 @@ def run_experiment(
 	np.save(exper_data_file, return_per_experiment)
 
 	avg_reward_data_file = "experiments/avg_reward_exp.npy"
-	np.save(avg_reward_data_file, avg_reward_per_experiment)
+	np.save(
+		avg_reward_data_file, 
+		avg_reward_per_experiment_step
+	)
 
 	print(
 		"BEST EXPERIMENT ", best_experiment_index, 
@@ -169,18 +183,13 @@ def run_experiment(
 		optimal_policy_weights
 	)
 
-	### Plot Total Reward Per Experiment
-	# plt.figure(figsize=(8, 5))
-	# plt.plot(return_per_experiment)
-	# plt.xlabel("Experiment Run", fontsize=12)
-	# plt.ylabel("Cummulative Reward", fontsize=12)
-	# plt.title("Pendulum Cummulative Reward Growth", fontsize=14)
-	# plt.savefig("reward_growth.png", dpi=100)
-	# plt.show()
-
 	### Plot Average Reward Per Experiment
 	plt.figure(figsize=(8, 5))
-	plt.plot(avg_reward_per_experiment)
+	plt.plot(
+		avg_reward_per_experiment_step[
+			best_experiment_index
+		]
+	)
 	plt.xlabel("Experiment Run", fontsize=12)
 	plt.ylabel("Average Reward", fontsize=12)
 	plt.title("Pendulum Average Reward", fontsize=14)
@@ -195,7 +204,7 @@ agent_parameters = {
     "actor_step_size": 2**(-2),
     "critic_step_size": 2**1,
     "avg_reward_step_size": 2**(-6),
-    "num_actions": 10,
+    "num_actions": 6,
     "iht_size": 4096
 }
 
@@ -203,8 +212,8 @@ agent_parameters = {
 environment_parameters = {}
 
 experiment_parameters = {
-	"max_steps": 100, 
-	"num_runs": 5000
+	"max_steps": 10000, 
+	"num_runs": 50
 }
 
 current_env = gym.make("Pendulum-v1")

@@ -1,6 +1,8 @@
 import os
 import numpy as np
 import gymnasium as gym
+import matplotlib.pyplot as plt 
+
 from agent import ActorCriticSoftmaxAgent
 
 agent_parameters = {
@@ -9,7 +11,7 @@ agent_parameters = {
     "actor_step_size": 2**(-2),
     "critic_step_size": 2**1,
     "avg_reward_step_size": 2**(-6),
-    "num_actions": 10,
+    "num_actions": 6,
     "iht_size": 4096
 }
 
@@ -38,32 +40,51 @@ agent_info = {
 }
 
 optimal_policy_weights = np.load(
-	"experiments/optimal_policy_4989_weights.npy"
+	"experiments/optimal_policy_38_weights.npy"
 )
 
-print(optimal_policy_weights)
+# print(optimal_policy_weights)
 
 current_agent.agent_init(agent_info)
 actions = np.linspace(-2.0, 2.0, 10)
-best_reward = 0
+avg_reward = 0
+avg_rewards = []
+rewards = []
 
 for t in range(200):
-	print("Agent Step ", t, "best reward ", best_reward)
 	optimal_action_index = current_agent.agent_optimal(
 		agent_last_state,
 		optimal_policy_weights
 	)
 
+	### OPTIMAL ACTION ACCORDING TO POLICY
 	action = [actions[optimal_action_index]]
-	next_obs, reward, terminated, truncated, info = current_env.step(action)
-	agent_last_state = metrics(next_obs)
-	if reward > best_reward:
-		best_reward = reward
 
+	### RANDOM ACTION
+	# action = current_env.action_space.sample()
+
+	next_obs, reward, terminated, truncated, info = current_env.step(action)
+	
+	agent_last_state = metrics(next_obs)
+	rewards.append(reward)
+	avg_reward = sum(rewards)/(t+1)
+	avg_rewards.append(avg_reward)
+	
+	print("Agent Step ", t, "with avg reward", avg_reward)
 	if terminated or truncated:
 		obs, info = current_env.reset()
 
 current_env.close()
+
+### Plot Cummulative Reward Growth 
+plt.figure(figsize=(8, 5))
+plt.plot(avg_rewards)
+plt.xlabel("Time Step", fontsize=12)
+plt.ylabel("Average Reward", fontsize=12)
+plt.title("Pendulum Average Reward Growth", fontsize=14)
+plt.savefig("reward_growth.png", dpi=100)
+plt.show()
+
 
 
 

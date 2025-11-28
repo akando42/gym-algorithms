@@ -1,10 +1,10 @@
-### ACTOR CRITIC TIDE CODING
+### ACTOR CRITIC Neural Network WITH TIDE CODING State Representation
 [X] Port Jupter Notebook to Python Experiment File
+[X] Use Pickle File for Optimal Game Play 
+[X] Store Optimal Policy as Picke File
 [ ] Make Improvement on Agent Step
-[ ] Store Optimal Policy as Picke File
-[ ] Use Pickle File for Optimal Game Play 
 
-### ACTOR CRITIC NEURAL NETWORK
+### ACTOR CRITIC NEURAL NETWORK WITH QTABLE 
 
 [ ] Actor Policy Neural Network Update
 [ ] Critic Action Value Neural Network Update

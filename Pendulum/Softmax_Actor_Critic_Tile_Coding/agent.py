@@ -69,7 +69,10 @@ class ActorCriticSoftmaxAgent(BaseAgent):
         # We initialize actor weights to three times the iht_size. 
         # Recall this is because we need to have one set of weights for each of the three actions.
         self.avg_reward = 0.0
-        self.actor_w = np.zeros((len(self.actions), iht_size))
+        self.actor_w = np.zeros(
+            (len(self.actions), 
+            iht_size)
+        )
         self.critic_w = np.zeros(iht_size)
 
         self.softmax_prob = None
@@ -85,15 +88,32 @@ class ActorCriticSoftmaxAgent(BaseAgent):
             The action selected according to the policy
         """
         
+        #### SOFTMAX POLICY
+
         # compute softmax probability
-        softmax_prob = compute_softmax_prob(self.actor_w, active_tiles)
+        softmax_prob = compute_softmax_prob(
+            self.actor_w, active_tiles
+        )
         
         # Sample action from the softmax probability array
         # self.rand_generator.choice() selects an element from the array with the specified probability
-        chosen_action = self.rand_generator.choice(self.actions, p=softmax_prob)
+        chosen_action = self.rand_generator.choice(
+            self.actions, p=softmax_prob
+        )
         
         # save softmax_prob as it will be useful later when updating the Actor
         self.softmax_prob = softmax_prob
+
+        #### GAUSSIAN POLICY
+        # print("ACTIVE TILE ", active_tiles)
+        # print("WEIGHTS ", self.actor_w.shape)
+        # mu = np.sum(self.actor_w[active_tiles])
+        # mu = np.clip(mu, -2.0, 2.0)
+
+        # action = mu + self.sigma * self.rand_generator.randn()
+        # chosen_action = float(np.clip(action, -2.0, 2.0))
+
+        # self.mu = mu 
         
         return chosen_action
 
@@ -175,11 +195,17 @@ class ActorCriticSoftmaxAgent(BaseAgent):
         # update actor weights using Equation (4) and (6)
         # We use self.softmax_prob saved from the previous timestep
         # We leave it as an exercise to verify that the code below corresponds to the equation.
+
+        ### SOFTMAX ACTOR WEIGHT UPDATES
         for a in self.actions:
             if a == self.last_action:
                 self.actor_w[a][self.prev_tiles] += self.actor_step_size * delta * (1 - self.softmax_prob[a])
             else:
                 self.actor_w[a][self.prev_tiles] += self.actor_step_size * delta * (0 - self.softmax_prob[a])
+
+        ### GAUSSIAN ACTOR WEIGHT UPDATES
+        # grad_log_pi = (self.last_action - self.mu) / (self.sigma ** 2)
+        # self.actor_w[a][self.prev_tiles] +=  self.actor_step_size * delta * grad_log_pi
 
         ### set current_action by calling self.agent_policy with active_tiles (1 line)
         # current_action = ? 
@@ -212,7 +238,12 @@ class ActorCriticSoftmaxAgent(BaseAgent):
             optimal_policy_weights,
             active_tiles
         )
-        chosen_action = self.rand_generator.choice(self.actions, p=softmax_prob)
+
+        print("Softmax Probability ", softmax_prob)
+
+        chosen_action = self.rand_generator.choice(
+            self.actions, p=softmax_prob
+        )
 
         return chosen_action
 
