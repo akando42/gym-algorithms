@@ -2,7 +2,10 @@ import numpy as np
 from tqdm import tqdm
 
 from pendulum_env import PendulumEnvironment
+
 from agent import ActorCriticSoftmaxAgent
+from acs_agent import ActorCriticGaussianAgent
+
 from rl_glue import RLGlue
 
 import os

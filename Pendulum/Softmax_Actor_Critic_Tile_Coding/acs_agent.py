@@ -13,7 +13,7 @@ get_active(angle, ang_vel):
 
 	### 360 angle velocity group
 	### Generate 360 group from -2pi to 2pi
-	angle_vels = np.linspace(-2, 2, 360, endpoint=False)
+	angle_vels = np.linspace(-8, 8, 360, endpoint=False)
 	angle_vel_index = np.argmin(np.abs(angle_vels - ang_vel))
 
 	space[angle_index][angle_vel_index] = 1
@@ -21,7 +21,7 @@ get_active(angle, ang_vel):
 	return space
 
 
-class ActorCriticSoftmaxAgent(BaseAgent):
+class ActorCriticGaussianAgent(BaseAgent):
 	def __init__(self):
 		self.actor_step_size = None
 		self.critic_step_size = None
