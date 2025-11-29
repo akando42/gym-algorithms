@@ -52,7 +52,11 @@ class ActorCriticSoftmaxAgent(BaseAgent):
         num_tiles = agent_info.get("num_tiles")
 
         # initialize self.tc to the tile coder we created
-        self.tc = PendulumTileCoder(iht_size=iht_size, num_tilings=num_tilings, num_tiles=num_tiles)
+        self.tc = PendulumTileCoder(
+            iht_size=iht_size, 
+            num_tilings=num_tilings, 
+            num_tiles=num_tiles
+        )
 
         # set step-size accordingly (we normally divide actor and critic step-size by num. tilings (p.217-218 of textbook))
         self.actor_step_size = agent_info.get("actor_step_size")/num_tilings

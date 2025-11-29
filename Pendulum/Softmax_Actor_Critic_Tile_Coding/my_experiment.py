@@ -154,7 +154,10 @@ def run_experiment(
 			optimal_policy_weights = actor_weights
 			best_experiment_index = i
 
-		# print("######## End Experiment ", i, "Reward ", total_reward)
+		print(
+			"######## End Experiment ", i, 
+			"Average Reward ", exp_avg_reward
+		)
 
 	# print(return_per_experiments)
 
@@ -204,8 +207,9 @@ agent_parameters = {
     "actor_step_size": 2**(-2),
     "critic_step_size": 2**1,
     "avg_reward_step_size": 2**(-6),
-    "num_actions": 6,
-    "iht_size": 4096
+    "num_actions": 10,
+    "iht_size": 4096,
+    "space_size": 129600
 }
 
 # Environment parameters
