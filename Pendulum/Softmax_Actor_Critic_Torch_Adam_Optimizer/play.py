@@ -6,6 +6,9 @@ from torch.distributions import Normal
 import gymnasium as gym
 import numpy as np
 
+print("Torch OK:", torch.__version__)
+print("Numpy OK:", np.__version__)
+
 class PolicyNetwork(nn.Module):
     def __init__(self, state_dim, action_dim, actor_lr):
         super(PolicyNetwork, self).__init__()
@@ -66,16 +69,18 @@ state, info = env.reset()
 
 done = False
 while not done:
-	s = torch.tensor(state, dtype=torch.float32).reshape(1, 3)
+    s = torch.tensor(state, dtype=torch.float32).reshape(1, 3)
 
-	with torch.no_grad():
-		action, log_prob = model.sample(s)
+    with torch.no_grad():
+        action, log_prob = model.sample(s)
 
-	# Scale to Pendulum action space
-	action = 2.0 * action
-	next_state, reward, terminated, truncated, info = env.step([action])
+    # Scale to Pendulum action space
+    action = 2.0 * action
+    action = float(action.detach().cpu().squeeze())
+    print("ACTION ", action)
+    next_state, reward, terminated, truncated, info = env.step([action])
 
-	state = next_state
-	done = terminated or truncated
+    state = next_state
+    done = terminated or truncated
 
 env.close()

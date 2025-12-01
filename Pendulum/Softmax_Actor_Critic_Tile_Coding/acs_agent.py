@@ -3,7 +3,7 @@ from base_agent import BaseAgent
 from tile_coder import PendulumTileCoder
 from softmax import compute_softmax_prob
 
-get_active(angle, ang_vel):
+def get_active(angle, ang_vel):
 	space = np.zeros((360, 360))
 
 	### 360 angle group
@@ -65,6 +65,7 @@ class ActorCriticGaussianAgent(BaseAgent):
 		### Select Best Policy
 
 		### Return Action
+		print("Agent Policy")
 
 
 	def agent_start(self, state):
@@ -106,30 +107,30 @@ class ActorCriticGaussianAgent(BaseAgent):
 
 	
 	def agent_message(self, message):
-        if message == 'get avg reward':
-            return self.avg_reward
+		if message == 'get avg reward':
+			return self.avg_reward
 
-        if message == "get actor weights":
-            return self.actor_w
+		if message == "get actor weights":
+			return self.actor_w
 
-    def agent_optimal(self, state, optimal_policy_weights):
-        angle, ang_vel = state
-        active_tiles = self.tc.get_tiles(
-            angle,
-            ang_vel
-        )
+	def agent_optimal(self, state, optimal_policy_weights):
+		angle, ang_vel = state
+		active_tiles = self.tc.get_tiles(
+			angle,
+			ang_vel
+		)
 
-        softmax_prob = compute_softmax_prob(
-            optimal_policy_weights,
-            active_tiles
-        )
+		softmax_prob = compute_softmax_prob(
+			optimal_policy_weights,
+			active_tiles
+		)
 
-        print("Softmax Probability ", softmax_prob)
+		print("Softmax Probability ", softmax_prob)
 
-        chosen_action = self.rand_generator.choice(
-            self.actions, p=softmax_prob
-        )
+		chosen_action = self.rand_generator.choice(
+			self.actions, p=softmax_prob
+		)
 
-        return chosen_action
+		return chosen_action
 
 
