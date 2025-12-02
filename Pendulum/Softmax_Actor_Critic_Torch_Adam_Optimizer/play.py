@@ -57,7 +57,7 @@ model = PolicyNetwork(3, 1, 0.001).to(
 )
 
 model.load_state_dict(
-	torch.load("models/sac_actor_EP50.pt", map_location="cpu")
+	torch.load("models/02122025/acs_optimal10.pt", map_location="cpu")
 )
 
 model.eval()
