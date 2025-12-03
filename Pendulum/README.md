@@ -6,8 +6,8 @@
 
 ### ACTOR CRITIC NEURAL NETWORK WITH QTABLE 
 
-[ ] Actor Policy Neural Network Update
-[ ] Critic Action Value Neural Network Update
-[ ] Plot Training Improvement
-[ ] Store Optimal Training Weights
-[ ] Play Action Selection with Optimal Training Weights 
+[X] Actor Policy Neural Network Update
+[X] Critic Action Value Neural Network Update
+[X] Plot Training Improvement
+[X] Store Optimal Training Weights
+[X] Play Action Selection with Optimal Training Weights 
