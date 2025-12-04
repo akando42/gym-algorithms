@@ -256,7 +256,7 @@ class ACSAgent:
 
 
 if __name__ == '__main__':
-	epocs = 30
+	epocs = 3
 
 	timestamp = "04122025"
 	model_dir = "models/" + timestamp
