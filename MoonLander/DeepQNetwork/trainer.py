@@ -37,13 +37,12 @@ class ReplayBuffer:
 		])
 
 	def sample(self, batch_size):
-		print("Sampling State from Memory Store")
+		# print("Sampling State from Memory Store")
 		states, actions, rewards, next_states, dones = zip(*random.sample(self.buffer, batch_size))
 		return np.stack(states), actions, rewards, np.stack(next_states), dones
 
 	def __len__(self):
 		return len(self.buffer)
-
 
 class DQN(torch.nn.Module):
 	def __init__(self, state_size=8, action_size=4, hidden_size=64):
@@ -69,6 +68,16 @@ class DQNAgent:
 		self.hidden_size = 64
 
 		self.q_network = DQN(state_size, action_size, self.hidden_size).to(self.device)
+		self.target_network = DQN(state_size, action_size, self.hidden_size).to(self.device)
+
+		### Copy More Optimal QNetwork Over After Each Episode
+		self.target_network.load_state_dict(self.q_network.state_dict())
+		self.target_network.eval()
+
+		self.gamma = 0.99
+		self.learning_rate = 1e-3
+
+		self.optimizer = torch.optim.Adam(self.q_network.parameters(), lr=self.learning_rate)
 
 		self.memory = ReplayBuffer(10000)
 		self.batch_size = 64
@@ -76,7 +85,7 @@ class DQNAgent:
 
 	### Reinforcing Improving Steps 
 	def step(self, state, action, reward, next_state, done):
-		print("Making Planning Step in Simulation")
+		# print("Making Planning Step in Simulation")
 		### Store Experiment in Memory
 		self.memory.push(state, action, reward, next_state, done)
 
@@ -88,7 +97,7 @@ class DQNAgent:
 	def act(self, state, eps=0.):
 		### Choose Optima Action 
 		if random.random() > eps:
-			print("OPTIMA STEP")
+			#print("OPTIMA STEP")
 			state = torch.from_numpy(state).float().unsqueeze(0).to(self.device)
 			self.q_network.eval()
 
@@ -104,13 +113,13 @@ class DQNAgent:
 
 		### Choose Random Action
 		else:
-			print("RANDOM STEP")
+			#print("RANDOM STEP")
 			random_action = random.choice(np.arange(self.action_size))
 			return random_action
 
 	### Updating Optimal Policy Model
 	def update_model(self):
-		print("Updating Policy Model ", self.batch_size)
+		# print("Updating Policy Model ", self.batch_size)
 
 		### Sample 64 Experiments from Memory
 		states, actions, rewards, next_states, dones = self.memory.sample(self.batch_size)
@@ -148,7 +157,7 @@ class DQNAgent:
 	### Updating State Action Value Estimation
 	def update_target_network(self):
 		print("Updating State Action Value Estimation")
-
+		self.target_network.load_state_dict(self.q_network.state_dict())
 
 training_env = gym.make("LunarLander-v3")
 state_size = training_env.observation_space.shape[0]
@@ -159,11 +168,14 @@ agent = DQNAgent(state_size, action_size)
 ### Training Neural Network
 n_training_epocs = 3000
 
+### Decaying Epsilon Rate from 1.0 to 0.01
 eps_start = 1.0  
-eps_end = 0.01  ### Decaying Epsilon Rate
+eps_end = 0.01  
 eps_decay = 0.995
 
 scores = []
+average_scores = []
+scores_window = deque(maxlen=100)
 eps = eps_start
 
 for epoc in range(1, n_training_epocs + 1):
@@ -171,7 +183,7 @@ for epoc in range(1, n_training_epocs + 1):
 	score = 0
 
 	while True:
-		print("Training in Epoc ", epoc)
+		# print("Training in Epoc ", epoc)
 
 		### Select Action using Current Policy
 		action = agent.act(state, eps)
@@ -185,6 +197,39 @@ for epoc in range(1, n_training_epocs + 1):
 
 		if done:
 			break
+
+	### Save score at end of episode
+	scores_window.append(score)
+	scores.append(score)
+
+	### Decreasing random rate
+	eps = max(eps_end, eps_decay * eps)
+
+	### Print Training Score
+	print(f"Episode {epoc} Average {np.mean(scores_window)} and Score {score} ")
+
+	### Updating Target Network Every 10 epoc
+	if epoc % 10 == 0:
+		agent.update_target_network()
+		average_score = np.mean(scores_window)
+		average_scores.append(average_score)
+
+	if epoc % 100 == 0 and np.mean(scores_window) >= 200 and score >= 200:
+		torch.save(
+			agent.q_network.state_dict(),
+			f"OPTIMA_agent_{epoc}.pt".format()
+		)
+		break
+		
+	# if epoc = 100 and np.mean(scores_window) >= 200:
+	# 	print("FIND OPTIMAL AGENT")
+	# 	torch.save(
+	# 		agent.q_network.state_dict(),
+	# 		"OPTIMA_agent.pt"
+	# 	)
+	# 	break
+
+np.save("Training_Score.npy", average_scores)
 
 ### Agent Playing using After Training Neural Network
 action_env = gym.make("LunarLander-v3", render_mode="human")

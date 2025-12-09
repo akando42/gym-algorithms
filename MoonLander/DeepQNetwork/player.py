@@ -59,7 +59,7 @@ device =  torch.device("cpu")
 
 model = DQN(state_size, action_size, hidden_size).to(device)
 model.load_state_dict(
-    torch.load("DQN_Agent.pt", map_location="cpu")
+    torch.load("OPTIMA_Agent_1000.pt", map_location="cpu")
 )
 
 def play_DQN_episode(env):
