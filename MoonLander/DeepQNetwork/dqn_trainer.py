@@ -278,7 +278,7 @@ class DQNAgent:
 
 
 ### Training Loop
-def train(agent, env, n_episodes=2000, eps_start=1.0, eps_end=0.01, eps_decay=0.995, target_update=10):
+def train(agent, env, n_episodes=3000, eps_start=1.0, eps_end=0.01, eps_decay=0.995, target_update=10):
     '''
     Train a DQN agent.
     
@@ -366,15 +366,17 @@ def train(agent, env, n_episodes=2000, eps_start=1.0, eps_end=0.01, eps_decay=0.
 
 ### START TRAINING
 # Make an environment
-env = gym.make('LunarLander-v3')
-state_size = env.observation_space.shape[0]
-action_size = env.action_space.n
+action_env = gym.make('LunarLander-v3', render_mode="human")
+training_env = gym.make('LunarLander-v3')
+
+state_size = training_env.observation_space.shape[0]
+action_size = training_env.action_space.n
 
 # Initilize a DQN agent
 agent = DQNAgent(state_size, action_size)
 
 # Train it
-scores = train(agent, env) 
+scores = train(agent, training_env) 
 
 def play_DQN_episode(env, agent):
     score = 0
@@ -394,5 +396,5 @@ def play_DQN_episode(env, agent):
 
     return score
  
-score = play_DQN_episode(env, agent)
-print("Score obtained:", score)
+score = play_DQN_episode(action_env, agent)
+print("\nTrained Neural Network Score obtained:", score)
