@@ -215,19 +215,13 @@ for epoc in range(1, n_training_epocs + 1):
 		average_scores.append(average_score)
 
 	if epoc % 100 == 0 and np.mean(scores_window) >= 200 and score >= 200:
+		print("FIND OPTIMAL AGENT")
+		### Saving Online Neural Network
 		torch.save(
 			agent.q_network.state_dict(),
 			f"OPTIMA_agent_{epoc}.pt".format()
 		)
 		break
-		
-	# if epoc = 100 and np.mean(scores_window) >= 200:
-	# 	print("FIND OPTIMAL AGENT")
-	# 	torch.save(
-	# 		agent.q_network.state_dict(),
-	# 		"OPTIMA_agent.pt"
-	# 	)
-	# 	break
 
 np.save("Training_Score.npy", average_scores)
 

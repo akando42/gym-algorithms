@@ -1,48 +1,16 @@
 import gymnasium as gym
 import numpy as np
-
 import torch
+import os
 
 class DQN(torch.nn.Module):
-    '''
-    This class defines a deep Q-network (DQN), a type of artificial neural network used in reinforcement learning.
-    The DQN is used to estimate the Q-values, which represent the expected return for each action in each state.
-    
-    Parameters
-    ----------
-    state_size: int, default=8
-        The size of the state space.
-    action_size: int, default=4
-        The size of the action space.
-    hidden_size: int, default=64
-        The size of the hidden layers in the network.
-    '''
     def __init__(self, state_size=8, action_size=4, hidden_size=64):
-        '''
-        Initialize a network with the following architecture:
-            Input layer (state_size, hidden_size)
-            Hidden layer 1 (hidden_size, hidden_size)
-            Output layer (hidden_size, action_size)
-        '''
         super(DQN, self).__init__()
         self.layer1 = torch.nn.Linear(state_size, hidden_size)
         self.layer2 = torch.nn.Linear(hidden_size, hidden_size)
         self.layer3 = torch.nn.Linear(hidden_size, action_size)
 
     def forward(self, state):
-        '''
-        Define the forward pass of the DQN. This function is called when the network is called to estimate Q-values.
-        
-        Parameters
-        ----------
-        state: torch.Tensor
-            The state for which to estimate the Q-values.
-
-        Returns
-        -------
-        torch.Tensor
-            The estimated Q-values for each action in the input state.
-        '''
         x = torch.relu(self.layer1(state))
         x = torch.relu(self.layer2(x))
         return self.layer3(x)
@@ -57,25 +25,20 @@ hidden_size = 64
 
 device =  torch.device("cpu")
 
-model = DQN(state_size, action_size, hidden_size).to(device)
-model.load_state_dict(
-    torch.load("OPTIMA_Agent_1000.pt", map_location="cpu")
-)
-
-def play_DQN_episode(env):
+def play_DQN_episode(env, agent_neural_network):
+    model = DQN(state_size, action_size, hidden_size).to(device)
+    model.load_state_dict(
+        torch.load(agent_neural_network, map_location="cpu")
+    )
     score = 0
     state, _ = env.reset(seed=42)
     
     while True:
-        # eps=0 for predictions
-        # action = agent.act(state, 0)
         s = torch.tensor(state, dtype=torch.float32)
         action_values = model.forward(s).detach().numpy()
-
-        print("Action Values", action_values)
         action = np.argmax(action_values)
-        print("Taking Action ", action)
-
+    
+    
         state, reward, terminated, truncated, _ = env.step(action) 
         done = terminated or truncated
 
@@ -86,6 +49,21 @@ def play_DQN_episode(env):
             break 
 
     return score
- 
-score = play_DQN_episode(env)
-print("Score obtained:", score)
+
+agent_dir = "OptimaAgents"
+agents = os.listdir(agent_dir)
+scores = []
+for agent in agents:
+    model_path = agent_dir + "/" + agent
+    score = play_DQN_episode(env, model_path)
+    scores.append(score)
+    print(agent, " scored ", score)
+
+max_index = scores.index(max(scores))
+max_agent = agents[max_index]
+
+print(max_agent, "is the most OPTIMAL with score ", scores[max_index])
+model_path = agent_dir + "/" + max_agent
+
+for i in range(3):
+    play_DQN_episode(env, model_path)
